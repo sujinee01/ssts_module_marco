@@ -68,6 +68,13 @@ Sub FilterModules()
 
     ' 결과 정렬
     If resultRow > 2 Then
+        ' 데이터 형식 문자열로 변환
+        Dim sortCell As Range
+        For Each sortCell In newWs.Range("A2:B" & resultRow - 1)
+            sortCell.Value = CStr(sortCell.Value)
+        Next sortCell
+
+        ' 정렬 수행
         With newWs.Sort
             .SortFields.Clear
             .SortFields.Add Key:=newWs.Columns(1), Order:=xlAscending ' SSTS 정렬
