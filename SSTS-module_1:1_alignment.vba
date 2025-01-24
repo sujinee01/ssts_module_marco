@@ -1,8 +1,7 @@
-Sub FilterModulesFromWorksheet()
+Sub FilterModulesToSameWorksheet()
 
     Dim wsInput As Worksheet
     Dim wsData As Worksheet
-    Dim wsOutput As Worksheet
     Dim lastRow As Long
     Dim inputLastRow As Long
     Dim resultRow As Long
@@ -12,33 +11,25 @@ Sub FilterModulesFromWorksheet()
     Dim colIndex As Integer
     Dim cell As Range
 
-    ' 입력 데이터와 결과 저장 워크시트 설정
-    Set wsInput = ThisWorkbook.Sheets(1) ' 모듈명을 입력한 워크시트 (Sheet1)
-    Set wsData = ThisWorkbook.Sheets(2) ' 원본 데이터가 있는 워크시트 (Sheet2)
+    ' 입력 데이터를 포함한 워크시트 지정 (Sheet1)
+    Set wsInput = ThisWorkbook.Sheets(1)
+    ' 원본 데이터를 포함한 워크시트 지정 (Sheet2)
+    Set wsData = ThisWorkbook.Sheets(2)
 
     ' 마지막 행 찾기 (데이터 워크시트의 데이터 범위)
     lastRow = wsData.Cells(wsData.Rows.Count, 1).End(xlUp).Row
 
-    ' 입력된 모듈명 찾기
+    ' 입력된 모듈명의 마지막 행 찾기
     inputLastRow = wsInput.Cells(wsInput.Rows.Count, 1).End(xlUp).Row
 
     ' 열 헤더 범위 설정
     Set colHeaders = wsData.Rows(1)
 
-    ' 결과를 저장할 새로운 워크시트 생성
-    On Error Resume Next
-    Application.DisplayAlerts = False
-    Set wsOutput = ThisWorkbook.Sheets("FilteredResults")
-    If Not wsOutput Is Nothing Then wsOutput.Delete
-    Application.DisplayAlerts = True
-    On Error GoTo 0
-    Set wsOutput = ThisWorkbook.Sheets.Add
-    wsOutput.Name = "FilteredResults"
+    ' 결과 표시를 위한 시작 행 설정 (입력 데이터 옆으로 표시)
+    resultRow = 2 ' 결과는 B열부터 시작한다고 가정
 
-    ' 결과 워크시트에 헤더 추가
-    wsOutput.Cells(1, 1).Value = "SSTS"
-    wsOutput.Cells(1, 2).Value = "Module"
-    resultRow = 2
+    ' 기존 결과 제거 (B2:C 영역 초기화)
+    wsInput.Range("B2:C" & wsInput.Rows.Count).ClearContents
 
     ' 입력된 모듈명을 기준으로 필터링
     For Each cell In wsInput.Range("A2:A" & inputLastRow)
@@ -52,8 +43,8 @@ Sub FilterModulesFromWorksheet()
                 ' 해당 모듈에서 "x"를 찾고 결과 저장
                 For Each dataCell In wsData.Columns(colIndex).Cells(2, 1).Resize(lastRow - 1)
                     If dataCell.Value = "x" Then
-                        wsOutput.Cells(resultRow, 1).Value = wsData.Cells(dataCell.Row, 1).Value ' SSTS 값 (첫 번째 열)
-                        wsOutput.Cells(resultRow, 2).Value = moduleName
+                        wsInput.Cells(resultRow, 2).Value = wsData.Cells(dataCell.Row, 1).Value ' SSTS 값
+                        wsInput.Cells(resultRow, 3).Value = moduleName ' 모듈명
                         resultRow = resultRow + 1
                     End If
                 Next dataCell
@@ -63,20 +54,11 @@ Sub FilterModulesFromWorksheet()
         End If
     Next cell
 
-    ' 결과 정렬
-    If resultRow > 2 Then
-        With wsOutput.Sort
-            .SortFields.Clear
-            .SortFields.Add Key:=wsOutput.Columns(1), Order:=xlAscending ' SSTS 정렬
-            .SortFields.Add Key:=wsOutput.Columns(2), Order:=xlAscending ' Module 정렬
-            .SetRange wsOutput.Range("A1:B" & resultRow - 1)
-            .Header = xlYes
-            .Apply
-        End With
-    Else
+    ' 결과가 없는 경우 메시지 표시
+    If resultRow = 2 Then
         MsgBox "일치하는 데이터가 없습니다.", vbInformation
+    Else
+        MsgBox "필터링 및 결과 표시가 완료되었습니다.", vbInformation
     End If
-
-    MsgBox "필터링 및 정렬이 완료되었습니다.", vbInformation
 
 End Sub
