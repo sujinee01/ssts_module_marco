@@ -27,7 +27,13 @@ Sub FilterModules()
     lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
 
     ' 사용자에게 모듈 입력 요청
-    selectedModules = Split(Application.InputBox("모듈을 선택하세요 (예: A,B,C):", "모듈 선택"), ",")
+    selectedModules = Application.InputBox("모듈을 선택하세요 (예: A,B,C):", "모듈 선택")
+    If selectedModules = False Or selectedModules = "" Then
+        MsgBox "모듈 입력이 취소되었습니다.", vbExclamation
+        Exit Sub
+    End If
+
+    selectedModules = Split(selectedModules, ",")
 
     ' 결과를 저장할 새로운 워크시트 생성
     On Error Resume Next
@@ -68,11 +74,8 @@ Sub FilterModules()
 
     ' 결과 정렬
     If resultRow > 2 Then
-        ' 데이터 형식 문자열로 변환
-        Dim sortCell As Range
-        For Each sortCell In newWs.Range("A2:B" & resultRow - 1)
-            sortCell.Value = CStr(sortCell.Value)
-        Next sortCell
+        ' 데이터 범위 확인
+        Debug.Print "정렬 범위: A1:B" & resultRow - 1
 
         ' 정렬 수행
         With newWs.Sort
